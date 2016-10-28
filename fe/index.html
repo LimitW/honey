@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Tracy Helper</title>
+    <meta name="viewport" content="inital-scale=1,maximum-scale=1,user-scaleble=no"/>
+    <link rel="stylesheet" href="css/bootstrap.min.css"/>
+    <script src="js/vue.min.js"></script>
+    <script src="js/jquery-3.1.1.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <style>
+      li{
+        list-style-type: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container-fluid" id="app">
+      <div class="row">
+        <!-- Button trigger modal -->
+        <button type="button" class="btn btn-primary btn-md" data-toggle="modal" data-target="#submitModal">
+          今日已选
+        </button>
+      </div>
+      <div class="row">
+        <div v-for="list in lists" v-model="lists">
+          <div class="col-xs-3">
+            <h4>{{list.name}}</h4>
+            <li v-for="li in list.ls">
+                <span>{{li.dt}}</span>
+                <span>{{li.province}}-{{li.part}}</span>
+                <a target="_blank" href="{{li.url}}">{{li.description}}</a>
+                <button @click=selectLine(li)>select</button>
+            </li>
+          </div>
+        </div>
+      </div>
+      <div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="submitModalLabel" aria-hidden="true" id="submitModal">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+              <h4 class="modal-title" id="submitModalLabel">今日已选列表</h4>
+            </div>
+            <div class="modal-body" v-model="submit_list">
+              <li v-for="li in submit_list">
+                <span>{{li.dt}}</span>
+                <span>{{li.province}}-{{li.part}}</span>
+                <a target="_blank" href="{{li.url}}">{{li.description}}</a>
+              </li>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-primary" @click=submitList()>Submit</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+
+  <script>
+    window.app = new Vue({
+  		el: '#app',
+  		data: {
+        isModalShow: 0,
+        lists: sessionStorage.getItem("lists") ? JSON.parse(sessionStorage.getItem("lists")):
+        [
+          {"name": "人事信息", "ls": []},
+          {"name": "政府采购", "ls": []},
+          {"name": "资质认证", "ls": []},
+          {"name": "未分类项", "ls": []}
+        ],
+        submit_list: sessionStorage.getItem("submit_list") ? JSON.parse(sessionStorage.getItem("submit_list")) : []
+  		},
+  		methods: {
+        selectLine: function(li){
+          var that = this;
+          for(var i = 0; i < that.submit_list.length; ++i){
+            if(li.url === that.submit_list[i].url) return;
+          }
+          that.submit_list.push(li);
+          that.lists[li.type].ls.$remove(li);
+          sessionStorage.setItem("submit_list", JSON.stringify(that.submit_list));
+          sessionStorage.setItem("lists", JSON.stringify(that.lists));
+        },
+        submitList: function(){
+          var targets = [], that = this;
+          for(var i = 0; i < that.submit_list.length; ++i){
+            targets.push(that.submit_list[i].url);
+          }
+          $.post({
+            url: 'http://123.207.143.195:3000/submit',
+            dataType: 'json',
+            data: {
+              targets: targets
+            },
+            success: function(data){
+              that.submit_list = [];
+              window.sessionStorage.clear();
+            }
+          });
+        }
+      },
+  		directives: {}
+  	});
+    if(sessionStorage.getItem('lists') === null){
+      sessionStorage.clear();
+      $.get({
+        url: 'http://123.207.143.195:3000/index',
+        contentType: "application/x-www-form-urlencoded",
+        success: function(data){
+          var lists = [
+            {"name": "人事信息", "ls": []},
+            {"name": "政府采购", "ls": []},
+            {"name": "资质认证", "ls": []},
+            {"name": "未分类项", "ls": []}
+          ];
+          ls = data.list;
+          for(var i = 0; i < ls.length; ++i){
+            lists[ls[i].type].ls.push(ls[i]);
+          }
+          for(var i = 0; i < 4; ++i){
+            lists[i].ls.sort(function(v1, v2){
+              var d1 = new Date(v1.dt), d2 = new Date(v2.dt);
+              if(d1 < d2) return 1;
+              else if(d1 == d2) return 0;
+              else return -1;
+            });
+          }
+          window.app.lists = lists;
+          sessionStorage.setItem("lists", JSON.stringify(lists));
+        }
+      });
+  }
+  </script>
+</html>

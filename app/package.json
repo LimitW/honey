@@ -1,0 +1,23 @@
+{
+  "name": "nodedb",
+  "version": "1.0.0",
+  "description": "db project back-end",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "mysql",
+    "nodejs",
+    "todolist"
+  ],
+  "author": "LimitW <hbdgwb13@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "body-parser": "^1.15.1",
+    "express": "^4.13.4",
+    "mysql": "^2.10.2",
+    "node-mysql": "^0.4.2"
+  },
+  "dependencies": {}
+}
