@@ -12,10 +12,18 @@ app.use(function(req, res, next) {
     res.header('Access-Control-Allow-Methods', 'GET, POST, DELETE');
     next();
 });
+
 process.on('uncaughtException', function (err) {
   console.log(err);
   console.log(err.stack);
 });
+
+function getClientIp(req){
+	return req.headers['x-forwarded-for'] ||
+		req.connection.remoteAddress ||
+		req.socket.remoteAddress ||
+		req.connection.socket.remoteAddress;
+}
 
 var mysql = require('mysql');
 
@@ -28,6 +36,8 @@ var pool = mysql.createPool({
 });
 
 app.get('/index', function(req, res){
+    console.log(new Date()+8*60*60*1000);
+    console.log(getClientIp(req) + ' init');
     res.set({'Content-Type': 'text/json','Encodeing': 'utf8'});
     pool.getConnection(function(err, connection){
         if(err){
@@ -61,9 +71,10 @@ app.get('/index', function(req, res){
 });
 
 app.post('/submit', function(req, res){
+  console.log(new Date()+8*60*60*1000);
+  console.log(getClientIp(req) + ' submit');
   res.set({'Content-Type': 'text/json','Encodeing': 'utf8'});
   var ls = req.body.targets, that = this;
-  console.log(typeof(ls));
   var cnt = 0, len = ls.length;
   for(var i = 0; i < ls.length; ++i){
     (function(i){

@@ -30,7 +30,7 @@
                 <span>{{li.dt}}</span>
                 <span>{{li.province}}-{{li.part}}</span>
                 <a target="_blank" href="{{li.url}}">{{li.description}}</a>
-                <button @click=selectLine(li)>select</button>
+                <button @click=selectLine(li) class="btn">Select</button>
             </li>
           </div>
         </div>
@@ -40,13 +40,14 @@
           <div class="modal-content">
             <div class="modal-header">
               <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-              <h4 class="modal-title" id="submitModalLabel">今日已选列表</h4>
+              <h4 class="modal-title" id="submitModalLabel">今日已选</h4>
             </div>
             <div class="modal-body" v-model="submit_list">
               <li v-for="li in submit_list">
                 <span>{{li.dt}}</span>
                 <span>{{li.province}}-{{li.part}}</span>
                 <a target="_blank" href="{{li.url}}">{{li.description}}</a>
+		<button class="btn" @click="restoreLine(li)">Restore</button>
               </li>
             </div>
             <div class="modal-footer">
@@ -74,6 +75,19 @@
         submit_list: sessionStorage.getItem("submit_list") ? JSON.parse(sessionStorage.getItem("submit_list")) : []
   		},
   		methods: {
+	restoreLine: function(li){
+		var that = this;
+		that.submit_list.$remove(li);
+		that.lists[li.type].ls.push(li);
+		that.lists[li.type].ls.sort(function(v1, v2){
+              		var d1 = new Date(v1.dt), d2 = new Date(v2.dt);
+              		if(d1 < d2) return 1;
+              		else if(d1 == d2) return 0;
+              		else return -1;
+            	});
+		sessionStorage.setItem("submit_list", JSON.stringify(that.submit_list));
+          	sessionStorage.setItem("lists", JSON.stringify(that.lists));
+        },
         selectLine: function(li){
           var that = this;
           for(var i = 0; i < that.submit_list.length; ++i){
